@@ -1,0 +1,80 @@
+import { json, type Request, type Response } from "express";
+import Task from "../models/Task";
+
+export class TaskController {
+  static createTask = async (req: Request, res: Response) => {
+    try {
+      const task = new Task(req.body);
+      console.log(req.project);
+      task.project = req.project.id;
+      req.project.tasks.push(task.id);
+      // await task.save();
+      // await req.project.save()
+      // equivalente espiritual
+      await Promise.allSettled([task.save(), req.project.save()]);
+      res.status(200).send("tarea creada");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  static getProjectTask = async (req: Request, res: Response) => {
+    try {
+      const tasks = await Task.find({ project: req.project.id }).populate(
+        "project"
+      );
+      res.status(200).json(tasks);
+    } catch (error) {
+      res.status(500).json({ error: "Hubo un error" });
+    }
+  };
+
+  static getTaksByID = async (req: Request, res: Response) => {
+    try {
+      res.json(req.task);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "Todo Termino señores, no tenemos escapatoria" });
+    }
+  };
+
+  static updateTask = async (req: Request, res: Response) => {
+    try {
+      req.task.name = req.body.name;
+      req.task.description = req.body.description;
+      await req.task.save();
+      res.send("Tarea Actualizada correctamente");
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "Hubo un error" });
+    }
+  };
+
+  static deleteTask = async (req: Request, res: Response) => {
+    try {
+      console.log(req.project.tasks);
+      req.project.tasks = req.project.tasks.filter(
+        (t) => t.toString() !== req.task.id.toString()
+      );
+      await req.task.deleteOne();
+      Promise.allSettled([req.task.deleteOne(), req.project.save()]);
+
+      res.send("Tarea Eliminada correctamente");
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "Hubo un error" });
+    }
+  };
+
+  static updateStatus = async (req: Request, res: Response) => {
+    try {
+      const { status } = req.body;
+      req.task.status = status;
+      await req.task.save();
+      res.send("Status updated");
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "An unexpected error occurred." });
+    }
+  };
+}
