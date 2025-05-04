@@ -6,7 +6,7 @@ export class ProjectController{
         const project= new Project(req.body);
         try {
             await project.save()
-            res.status(201).json(project)
+            res.status(201).json('Project created')
         } catch (error) {
             console.log(error)
         }
