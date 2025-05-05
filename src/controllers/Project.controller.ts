@@ -24,7 +24,7 @@ export class ProjectController{
     static getProjectByID = async (req:Request, res:Response) =>{
         try {
             const {id} = req.params;
-            const project = (await Project.findById(id)).populated('tasks');
+            const project = await Project.findById(id).populate('tasks');
 
             if (!project) {
                 res.status(404).json({msg:'Proyecto no existente'});
